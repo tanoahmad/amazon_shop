@@ -1,113 +1,25 @@
 <?php
-namespace Opencart\Admin\Controller\Common;
-class Developer extends \Opencart\System\Engine\Controller {
-	public function index(): void {
-		$this->load->language('common/developer');
+// Heading
+$_['heading_title']    = 'Developer Settings';
 
-		$data['developer_sass'] = $this->config->get('developer_sass');
+// Text
+$_['text_success']     = 'Success: You have modified developer settings!';
+$_['text_theme']       = 'Theme';
+$_['text_sass']        = 'SASS';
+$_['text_cache']       = 'Success: You have cleared the %s cache!';
 
-		$data['user_token'] = $this->session->data['user_token'];
+// Column
+$_['column_component'] = 'Component';
+$_['column_action']    = 'Action';
 
-		$this->response->setOutput($this->load->view('common/developer', $data));
-	}
+// Entry
+$_['entry_theme']      = 'Theme';
+$_['entry_sass']       = 'SASS';
+$_['entry_cache']      = 'Cache';
 
-	public function edit(): void {
-		$this->load->language('common/developer');
+// Button
+$_['button_on']        = 'On';
+$_['button_off']       = 'Off';
 
-		$json = [];
-
-		if (!$this->user->hasPermission('modify', 'common/developer')) {
-			$json['error'] = $this->language->get('error_permission');
-		}
-
-		if (!$json) {
-			$this->load->model('setting/setting');
-
-			$this->model_setting_setting->editSetting('developer', $this->request->post, 0);
-
-			$json['success'] = $this->language->get('text_success');
-		}
-
-		$this->response->addHeader('Content-Type: application/json');
-		$this->response->setOutput(json_encode($json));
-	}
-
-	public function theme(): void {
-		$this->load->language('common/developer');
-		
-		$json = [];
-		
-		if (!$this->user->hasPermission('modify', 'common/developer')) {
-			$json['error'] = $this->language->get('error_permission');
-		}
-
-		if (!$json) {
-			$directories = glob(DIR_CACHE . 'template/*', GLOB_ONLYDIR);
-
-			if ($directories) {
-				foreach ($directories as $directory) {
-					$files = glob($directory . '/*');
-					
-					foreach ($files as $file) { 
-						if (is_file($file)) {
-							unlink($file);
-						}
-					}
-					
-					if (is_dir($directory)) {
-						rmdir($directory);
-					}
-				}
-			}
-						
-			$json['success'] = sprintf($this->language->get('text_cache'), $this->language->get('text_theme'));
-		}
-		
-		$this->response->addHeader('Content-Type: application/json');
-		$this->response->setOutput(json_encode($json));
-	}
-		
-	public function sass(): void {
-		$this->load->language('common/developer');
-		
-		$json = [];
-		
-		if (!$this->user->hasPermission('modify', 'common/developer')) {
-			$json['error'] = $this->language->get('error_permission');
-		}
-
-		if (!$json) {
-			// Before we delete we need to make sure there is a sass file to regenerate the css
-			$file = DIR_APPLICATION  . 'view/stylesheet/bootstrap.css';
-			
-			if (is_file($file) && is_file(DIR_APPLICATION . 'view/stylesheet/scss/bootstrap.scss')) {
-				unlink($file);
-			}
-			 
-			$files = glob(DIR_CATALOG  . 'view/theme/*/stylesheet/scss/bootstrap.scss');
-			 
-			foreach ($files as $file) {
-				$file = substr($file, 0, -20) . '/bootstrap.css';
-				
-				if (is_file($file)) {
-					unlink($file);
-				}
-			}
-
-			$files = glob(DIR_CATALOG  . 'view/theme/*/stylesheet/stylesheet.scss');
-			 
-			foreach ($files as $file) {
-				$file = substr($file, 0, -16) . '/stylesheet.css';
-				
-				if (is_file($file)) {
-					unlink($file);
-				}
-			}
-
-			$json['success'] = sprintf($this->language->get('text_cache'), $this->language->get('text_sass'));
-		}	
-		
-		$this->response->addHeader('Content-Type: application/json');
-		$this->response->setOutput(json_encode($json));					
-	}
-}
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify developer settings!';

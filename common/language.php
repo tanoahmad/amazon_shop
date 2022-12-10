@@ -1,41 +1,87 @@
 <?php
-namespace Opencart\Install\Controller\Common;
+namespace Opencart\Admin\Controller\Common;
 class Language extends \Opencart\System\Engine\Controller {
 	public function index(): string {
-		$this->language->load('common/language');
-
-		$data['text_language'] = $this->language->get('text_language');
-
-		if (isset($this->request->get['route'])) {
-			$route = $this->request->get['route'];
-		} else {
-			$route = $this->config->get('action_default');
-		}
-
-		if (isset($this->request->get['language'])) {
-			$data['code'] = $this->request->get['language'];
-		} else {
-			$data['code'] = $this->config->get('language_code');
-		}
-
 		$data['languages'] = [];
 
-		$languages = glob(DIR_LANGUAGE . '*', GLOB_ONLYDIR);
+		$this->load->model('localisation/language');
 
-		foreach ($languages as $code) {
-			$code = basename($code);
+		$results = $this->model_localisation_language->getLanguages();
 
-			$language = new \Opencart\System\Library\Language($code);
-			$language->addPath(DIR_LANGUAGE);
-			$language->load($code);
-
+		foreach ($results as $result) {
 			$data['languages'][] = [
-				'text' => $language->get('text_name'),
-				'code' => $code,
-				'href' => $this->url->link($route, 'language=' . $code)
+				'name'  => $result['name'],
+				'code'  => $result['code'],
+				'image' => $result['image']
 			];
 		}
 
+		if (isset($this->request->cookie['language'])) {
+			$data['code'] = $this->request->cookie['language'];
+		} else {
+			$data['code'] = $this->config->get('config_language');
+		}
+
+		// Redirect
+		$url_data = $this->request->get;
+
+		if (isset($url_data['route'])) {
+			$route = $url_data['route'];
+		} else {
+			$route = 'common/dashboard';
+		}
+
+		unset($url_data['route']);
+
+		$url = '';
+
+		if ($url_data) {
+			$url .= '&' . urldecode(http_build_query($url_data));
+		}
+
+		$data['redirect'] = $this->url->link($route, $url);
+
+		$data['user_token'] = $this->session->data['user_token'];
+
 		return $this->load->view('common/language', $data);
+	}
+
+	public function save(): void {
+		$this->language->load('common/language');
+
+		$json = [];
+
+		if (isset($this->request->post['code'])) {
+			$code = $this->request->post['code'];
+		} else {
+			$code = '';
+		}
+
+		if (isset($this->request->post['redirect'])) {
+			$redirect = htmlspecialchars_decode($this->request->post['redirect'], ENT_COMPAT);
+		} else {
+			$redirect = '';
+		}
+
+		$this->load->model('localisation/language');
+
+		$language_info = $this->model_localisation_language->getLanguageByCode($code);
+
+		if (!$language_info) {
+			$json['error'] = $this->language->get('error_language');
+		}
+
+		if (!$json) {
+			setcookie('language', $code, time() + 60 * 60 * 24 * 365 * 10);
+
+			if ($redirect && substr($redirect, 0, strlen($this->config->get('config_url'))) == $this->config->get('config_url')) {
+				$json['redirect'] = $redirect;
+			} else {
+				$json['redirect'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
+			}
+		}
+
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
 	}
 }

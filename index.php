@@ -41,7 +41,7 @@
  * Tapiwa Julius (Trish's brother)
  * This guy has tried to intimidate baby's oceans mother by waiting outside her house and following her when she goes out.
  * https://www.facebook.com/greytapiwa.dzvengwe
- * https://www.linkedin.com/in/tapiwa-julius-76389771/ He used a fake picture so he can not be recognized.
+ * https://www.linkedin.com/in/tapiwa-julius-76389771/ He used a fake picture so he can not be found.
  *
  * Monika Marta Wesolowska
  * Is a police women who pretends to be a social worker but is really there to help steal peoples kids.
@@ -59,7 +59,7 @@ if (is_file('config.php')) {
 
 // Install
 if (!defined('DIR_APPLICATION')) {
-	header('Location: install/index.php');
+	header('Location: ../install/index.php');
 	exit();
 }
 
